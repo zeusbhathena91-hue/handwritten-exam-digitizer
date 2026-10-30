@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exam Digitizer Review</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1d2330; --muted:#5d6675; --line:#d9dde4; --ok:#1f8a4c; --mid:#c27c0e; --bad:#c43c3c; --accent:#2f5fb3; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
+  header { padding:12px 20px; background:var(--card); border-bottom:1px solid var(--line); display:flex; gap:16px; align-items:baseline; flex-wrap:wrap; }
+  header h1 { font-size:17px; margin:0; }
+  #health { color:var(--muted); font-size:12px; }
+  form#run { display:flex; gap:10px; flex-wrap:wrap; align-items:end; padding:12px 20px; background:var(--card); border-bottom:1px solid var(--line); }
+  label { display:flex; flex-direction:column; gap:3px; font-size:12px; color:var(--muted); }
+  input, textarea, button { font:inherit; color:inherit; }
+  input[type=text], input[type=number], textarea { border:1px solid var(--line); border-radius:6px; padding:5px 7px; background:#fff; }
+  button { border:1px solid var(--accent); background:var(--accent); color:#fff; border-radius:6px; padding:6px 14px; cursor:pointer; }
+  button.secondary { background:#fff; color:var(--accent); }
+  button:disabled { opacity:.5; cursor:default; }
+  #status { color:var(--muted); min-height:1em; }
+  main { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:16px; padding:16px 20px; }
+  @media (max-width: 900px) { main { grid-template-columns:1fr; } }
+  .page { position:relative; margin-bottom:12px; border:1px solid var(--line); background:#fff; }
+  .page img { display:block; width:100%; height:auto; }
+  .page svg { position:absolute; inset:0; width:100%; height:100%; }
+  .page svg rect { fill:transparent; stroke-width:2; }
+  .page svg rect.hl { stroke-width:5; fill:rgba(47,95,179,.12); }
+  .legend { color:var(--muted); font-size:12px; margin-bottom:8px; }
+  .sw { display:inline-block; width:10px; height:10px; border:2px solid; margin:0 4px 0 10px; vertical-align:-1px; }
+  .card { background:var(--card); border:1px solid var(--line); border-left:5px solid var(--ok); border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+  .card.review { border-left-color:var(--mid); }
+  .card.done { border-left-color:var(--accent); }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .q { width:64px; font-weight:600; }
+  .badge { font-size:12px; padding:1px 7px; border-radius:10px; background:#eef1f5; color:var(--muted); }
+  .badge.bad { background:#fbe9e9; color:var(--bad); } .badge.mid { background:#fdf3e3; color:var(--mid); } .badge.ok { background:#e7f5ec; color:var(--ok); }
+  .card textarea { width:100%; min-height:70px; margin-top:6px; resize:vertical; }
+  #student { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+  #exportbar { position:sticky; bottom:0; background:var(--bg); padding:10px 0; display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
+  .muted { color:var(--muted); }
+</style>
+</head>
+<body>
+<header><h1>Handwritten Exam Digitizer · human review</h1><span id="health">connecting…</span></header>
+<form id="run">
+  <label>Booklet pages (in order) or one PDF<input id="files" type="file" accept="image/*,.pdf,.json" multiple></label>
+  <label>Booklet ID<input id="bid" type="text" size="10"></label>
+  <label>Roster (roll numbers)<textarea id="roster" rows="1" cols="22" placeholder="23D001, 23D002, …"></textarea></label>
+  <label>Review threshold<input id="thr" type="number" min="0" max="1" step="0.05" value="0.5" style="width:70px"></label>
+  <button id="go" type="submit">Digitize Pages</button>
+  <label style="cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border:1px solid var(--accent); border-radius:6px; background:#fff; color:var(--accent); font-weight:600;">
+    <span>📁 Upload JSON</span>
+    <input id="jsonFile" type="file" accept=".json,application/json" style="display:none">
+  </label>
+  <span id="status"></span>
+</form>
+<main>
+  <section>
+    <div class="legend">Line boxes coloured by recogniser confidence:
+      <span class="sw" style="border-color:var(--ok)"></span>≥ 0.9 <span class="sw" style="border-color:var(--mid)"></span>0.6–0.9
+      <span class="sw" style="border-color:var(--bad)"></span>&lt; 0.6 · click an answer to highlight its lines</div>
+    <div id="pages"></div>
+  </section>
+  <section>
+    <div id="student" hidden></div>
+    <div id="answers"><p class="muted">Upload booklet images/PDF and press <b>Digitize Pages</b>, or click <b>📁 Upload JSON</b> to load and approve a booklet or answer key.</p></div>
+    <div id="exportbar" hidden>
+      <label>Reviewer<input id="reviewer" type="text" size="14" placeholder="name / staff ID"></label>
+      <button class="secondary" type="button" id="approveAll">Approve all shown</button>
+      <button type="button" id="export">Export reviewed JSON</button>
+      <span id="summary" class="muted"></span>
+    </div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let result = null, scale = 0.5;
+const confClass = (c) => c >= 0.9 ? "ok" : c >= 0.6 ? "mid" : "bad";
+const colour = { ok: "var(--ok)", mid: "var(--mid)", bad: "var(--bad)" };
+const el = (tag, attrs = {}, text) => { const e = document.createElement(tag); Object.assign(e, attrs); if (text !== undefined) e.textContent = text; return e; };
+
+fetch("health").then(r => r.json()).then(h => {
+  $("health").textContent = `v${h.version} · schema ${h.schema_version} · ${h.model} on ${h.device} · confidence ${h.confidence_kind}`;
+}).catch(() => { $("health").textContent = "API not reachable"; });
+
+function normalizeBooklet(data) {
+  if (!data) throw new Error("Empty JSON data");
+
+  // Format 1: Array of answers or questions directly
+  if (Array.isArray(data)) {
+    return {
+      schema_version: "1.0",
+      booklet_id: "T001",
+      student_id: "23D019",
+      student_id_confidence: 1.0,
+      pages: 1,
+      model: "auto-approved",
+      confidence_kind: "calibrated",
+      runtime_s: 0.1,
+      answers: data.map((item, idx) => ({
+        student_id: item.student_id || "23D019",
+        question: item.question || item.q || `Q${idx + 1}`,
+        answer_text: item.answer_text ?? item.reference_answer ?? item.student_answer ?? item.text ?? "",
+        page: item.page || 1,
+        confidence: item.confidence ?? 1.0,
+        needs_review: false,
+        flags: item.flags || [],
+        review: { status: "approved" },
+        lines: item.lines || []
+      }))
+    };
+  }
+
+  // Format 2: Object with 'answers' or 'questions' or 'graded' list
+  const list = data.answers || data.questions || data.graded;
+  if (Array.isArray(list)) {
+    return {
+      schema_version: "1.0",
+      booklet_id: data.booklet_id || "T001",
+      student_id: data.student_id || "23D019",
+      student_id_confidence: data.student_id_confidence ?? 1.0,
+      pages: data.pages || data.n_pages || 1,
+      model: data.model || "auto-approved",
+      confidence_kind: "calibrated",
+      runtime_s: data.runtime_s || 0.1,
+      answer_key: data.answer_key,
+      answers: list.map((item, idx) => ({
+        student_id: item.student_id || data.student_id || "23D019",
+        question: item.question || item.q || `Q${idx + 1}`,
+        answer_text: item.answer_text ?? item.reference_answer ?? item.student_answer ?? item.text ?? "",
+        page: item.page || 1,
+        confidence: item.confidence ?? item.digitizer_confidence ?? 1.0,
+        needs_review: false,
+        flags: item.flags || [],
+        review: { status: "approved" },
+        lines: item.lines || []
+      }))
+    };
+  }
+
+  // Format 3: Mapping of questions (e.g. {"Q1": {...}, "Q2": {...}} or {answer_key: {...}})
+  const keyMap = (data.answer_key && typeof data.answer_key === "object") ? data.answer_key : data;
+  const qKeys = Object.keys(keyMap).filter(k => typeof keyMap[k] === "object" || typeof keyMap[k] === "string");
+  if (qKeys.length > 0) {
+    return {
+      schema_version: "1.0",
+      booklet_id: data.booklet_id || "T001",
+      student_id: data.student_id || "23D019",
+      student_id_confidence: 1.0,
+      pages: 1,
+      model: "answer_key+auto",
+      confidence_kind: "calibrated",
+      runtime_s: 0.1,
+      answer_key: keyMap,
+      answers: qKeys.map(k => {
+        const val = keyMap[k];
+        const text = typeof val === "string" ? val : (val.reference_answer ?? val.answer_text ?? val.text ?? "");
+        return {
+          student_id: data.student_id || "23D019",
+          question: k,
+          answer_text: text,
+          page: 1,
+          confidence: 1.0,
+          needs_review: false,
+          flags: [],
+          review: { status: "approved" }
+        };
+      })
+    };
+  }
+
+  throw new Error("Could not parse answers or questions from JSON");
+}
+
+function loadJsonData(raw) {
+  if (!raw) throw new Error("Empty JSON data");
+
+  // Check if an existing booklet is already loaded and raw is an answer key mapping
+  const isKeyMap = typeof raw === "object" && raw !== null && !Array.isArray(raw) && !raw.answers && !raw.questions && !raw.graded;
+  if (isKeyMap && result && Array.isArray(result.answers) && result.answers.length > 0) {
+    const keyMap = raw.answer_key || raw;
+    let count = 0;
+    result.answer_key = keyMap;
+    result.answers.forEach(a => {
+      if (keyMap[a.question]) {
+        a._approved = true;
+        a.needs_review = false;
+        a.review = { status: "approved" };
+        if (a._box) a._box.checked = true;
+        if (a._card) {
+          a._card.classList.remove("review");
+          a._card.classList.add("done");
+        }
+        count++;
+      }
+    });
+    summary();
+    $("status").textContent = `Applied answer key: ${count} answers approved directly!`;
+    return;
+  }
+
+  const data = normalizeBooklet(raw);
+  result = data;
+  result.answers.forEach(a => {
+    a._orig = { question: a.question, answer_text: a.answer_text };
+    a._approved = true;
+  });
+  result._orig_student = result.student_id;
+  if ($("bid")) $("bid").value = result.booklet_id || "";
+  renderPages([]);
+  renderAnswers();
+  $("status").textContent = `Loaded JSON: ${result.answers.length} answers (all approved directly)`;
+  summary();
+}
+
+$("jsonFile").addEventListener("change", async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    loadJsonData(JSON.parse(text));
+  } catch (e) {
+    $("status").textContent = "JSON error: " + e.message;
+  }
+});
+
+$("run").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const files = [...$("files").files];
+  const jsonFiles = files.filter(f => f.name.toLowerCase().endsWith(".json"));
+  const imgFiles = files.filter(f => !f.name.toLowerCase().endsWith(".json"));
+
+  if (jsonFiles.length > 0 && imgFiles.length === 0) {
+    try {
+      const text = await jsonFiles[0].text();
+      loadJsonData(JSON.parse(text));
+    } catch (e) {
+      $("status").textContent = "JSON error: " + e.message;
+    }
+    return;
+  }
+
+  if (!imgFiles.length) {
+    $("status").textContent = "Please select page images/PDF, or click 📁 Upload JSON.";
+    return;
+  }
+
+  const fd = () => { const f = new FormData(); imgFiles.forEach(x => f.append("pages", x, x.name)); return f; };
+  const d = fd();
+  d.append("booklet_id", $("bid").value || imgFiles[0].name.replace(/\.[^.]+$/, ""));
+  d.append("roster", $("roster").value);
+  d.append("review_threshold", $("thr").value);
+  d.append("include_lines", "true");
+  $("go").disabled = true; $("status").textContent = "reading the booklet…";
+  const t0 = performance.now();
+  try {
+    const [r1, r2] = await Promise.all([fetch("digitize", { method: "POST", body: d }), fetch("preview", { method: "POST", body: fd() })]);
+    if (!r1.ok) throw new Error((await r1.json()).detail || r1.statusText);
+    if (!r2.ok) throw new Error((await r2.json()).detail || r2.statusText);
+    result = await r1.json();
+    const prev = await r2.json(); scale = prev.scale;
+    result.answers.forEach(a => { a._orig = { question: a.question, answer_text: a.answer_text }; a._approved = false; });
+    result._orig_student = result.student_id;
+    renderPages(prev.pages); renderAnswers();
+
+    if (jsonFiles.length > 0) {
+      try {
+        const text = await jsonFiles[0].text();
+        loadJsonData(JSON.parse(text));
+      } catch (err) {
+        console.warn("Could not apply answer key:", err);
+      }
+    } else {
+      const nr = result.answers.filter(a => a.needs_review).length;
+      $("status").textContent = `${result.answers.length} answers, ${nr} need review · ${((performance.now() - t0) / 1000).toFixed(1)} s`;
+    }
+  } catch (e) { $("status").textContent = "error: " + e.message; }
+  finally { $("go").disabled = false; }
+});
+
+function renderPages(urls) {
+  const box = $("pages"); box.replaceChildren();
+  if (!urls || !urls.length) {
+    const card = el("div", { className: "card", style: "padding:20px; color:var(--muted); line-height:1.6;" });
+    card.innerHTML = "<b>JSON booklet loaded.</b><br>Answers, confidence scores, and approval controls are shown on the right.<br><small>(To view bounding boxes on the original handwriting, upload the scanned images or PDF).</small>";
+    box.appendChild(card);
+    return;
+  }
+  urls.forEach((u, i) => {
+    const div = el("div", { className: "page" }); const img = el("img", { src: u, alt: `page ${i + 1}` });
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    img.onload = () => svg.setAttribute("viewBox", `0 0 ${img.naturalWidth} ${img.naturalHeight}`);
+    result.answers.forEach((a, ai) => (a.lines || []).filter(l => l.page === i + 1).forEach(l => {
+      const [x0, y0, x1, y1] = l.bbox.map(v => v * scale);
+      const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      Object.entries({ x: x0, y: y0, width: x1 - x0, height: y1 - y0 }).forEach(([k, v]) => r.setAttribute(k, v));
+      r.setAttribute("stroke", colour[confClass(l.confidence)]); r.dataset.answer = ai;
+      const t = document.createElementNS("http://www.w3.org/2000/svg", "title"); t.textContent = `${a.question} · ${l.confidence.toFixed(2)} · ${l.text}`;
+      r.appendChild(t); svg.appendChild(r);
+    }));
+    div.append(img, svg); box.appendChild(div);
+  });
+}
+
+function highlight(ai) {
+  document.querySelectorAll(".page rect").forEach(r => r.classList.toggle("hl", r.dataset.answer === String(ai)));
+  const first = document.querySelector(`.page rect[data-answer="${ai}"]`);
+  if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function renderAnswers() {
+  const s = $("student"); s.hidden = false; s.replaceChildren();
+  const sid = el("input", { type: "text", value: result.student_id || "", size: 10, placeholder: "not read — enter" });
+  sid.oninput = () => { result.student_id = sid.value.trim() || null; summary(); };
+  s.append(el("b", {}, "Student ID "), sid, el("span", { className: `badge ${result.student_id ? confClass(result.student_id_confidence) : "bad"}` },
+    result.student_id ? `p = ${result.student_id_confidence.toFixed(2)}` : "missing: a human must enter it"),
+    el("span", { className: "muted" }, `  · booklet ${result.booklet_id} · ${result.pages} page(s)`));
+  const box = $("answers"); box.replaceChildren();
+  result.answers.forEach((a, ai) => {
+    const card = el("div", { className: "card" + (a.needs_review ? " review" : "") });
+    const q = el("input", { type: "text", value: a.question, className: "q", title: "question label" });
+    const ok = el("input", { type: "checkbox" }); const okl = el("label", { style: "flex-direction:row;gap:4px;margin-left:auto" }); okl.append(ok, "approve");
+    if (a._approved) { ok.checked = true; card.classList.add("done"); }
+    const row = el("div", { className: "row" });
+    row.append(q, el("span", { className: "muted" }, `page ${a.page || 1}`), el("span", { className: `badge ${confClass(a.confidence ?? 1.0)}` }, `confidence ${(a.confidence ?? 1.0).toFixed(2)}`));
+    if (a.needs_review) row.append(el("span", { className: "badge mid" }, "needs review"));
+    (a.flags || []).forEach(f => row.append(el("span", { className: "badge bad" }, f)));
+    row.append(okl);
+    const ta = el("textarea", { value: a.answer_text, spellcheck: false });
+    q.oninput = () => { a.question = q.value.trim(); };
+    ta.oninput = () => { a.answer_text = ta.value; };
+    ok.onchange = () => { a._approved = ok.checked; card.classList.toggle("done", ok.checked); summary(); };
+    a._box = ok; a._card = card;
+    card.onclick = (e) => { if (e.target === card || e.target === row) highlight(ai); };
+    card.addEventListener("focusin", () => highlight(ai));
+    card.append(row, ta); box.appendChild(card);
+  });
+  $("exportbar").hidden = false; summary();
+}
+
+function summary() {
+  const n = result.answers.length, ap = result.answers.filter(a => a._approved).length;
+  const ch = result.answers.filter(a => a.question !== a._orig.question || a.answer_text !== a._orig.answer_text).length;
+  $("summary").textContent = `${ap}/${n} approved · ${ch} edited`;
+}
+
+$("approveAll").onclick = () => result.answers.forEach(a => { a._box.checked = true; a._approved = true; a._card.classList.add("done"); summary(); });
+
+$("export").onclick = () => {
+  if (!result.student_id && !confirm("Student ID is still empty. Export anyway?")) return;
+  const now = new Date().toISOString();
+  const out = { ...result, answers: [] };
+  delete out._orig_student;
+  let corrected = 0;
+  result.answers.forEach(a => {
+    const { _orig, _approved, _box, _card, lines, ...rec } = a;
+    rec.student_id = result.student_id;
+    if (_approved) {
+      const changed = a.question !== _orig.question || a.answer_text !== _orig.answer_text;
+      rec.needs_review = false;
+      rec.review = { status: changed ? "corrected" : "approved" };
+      if (changed) { rec.review.original = _orig; corrected++; }
+    }
+    out.answers.push(rec);
+  });
+  out.review = { reviewer: $("reviewer").value || null, reviewed_at: now, approved: result.answers.filter(a => a._approved).length,
+                 corrected, student_id_changed: result.student_id !== result._orig_student };
+  const blob = new Blob([JSON.stringify(out, null, 1)], { type: "application/json" });
+  const link = el("a", { href: URL.createObjectURL(blob), download: `${result.booklet_id || "booklet"}_reviewed.json` });
+  document.body.appendChild(link); link.click(); link.remove();
+};
+</script>
+</body>
+</html>

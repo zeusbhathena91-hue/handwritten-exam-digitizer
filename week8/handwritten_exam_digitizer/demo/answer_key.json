@@ -1,0 +1,14 @@
+{
+ "Q1": {"question_text": "What do the fish do once they have moved away ahead of the trawl?",
+        "reference_answer": "They keep swimming ahead of the gear at the same speed as the trawl for an unknown period of time.",
+        "rubric": ["swimming", "same speed", "period of time"], "max_marks": 5},
+ "Q2": {"question_text": "When do flat fish notice the footrope, and how do they react?",
+        "reference_answer": "Flat fish are aware of the moving footrope before it reaches them, and they move away before it arrives.",
+        "rubric": ["aware", "footrope", "move away"], "max_marks": 5},
+ "Q3": {"question_text": "Why do the fish eventually stop swimming ahead of the trawl?",
+        "reference_answer": "Either they become tired, or they become more used to the disturbance.",
+        "rubric": ["tired", "used to", "disturbance"], "max_marks": 5},
+ "Q4": {"question_text": "Which case is the simplest to study, and what does the evidence suggest?",
+        "reference_answer": "The simplest case is that of flat fish on the bottom; the evidence suggests that the fish are aware of the gear.",
+        "rubric": ["simplest case", "flat fish", "bottom", "evidence"], "max_marks": 5}
+}

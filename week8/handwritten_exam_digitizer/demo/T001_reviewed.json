@@ -1,0 +1,71 @@
+{
+ "schema_version": "1.0",
+ "booklet_id": "T001",
+ "student_id": "23D019",
+ "student_id_confidence": 0.9992,
+ "pages": 1,
+ "answers": [
+  {
+   "student_id": "23D019",
+   "question": "Q4",
+   "answer_text": "let us consider first what would appear to be the simplest case - that of flat fish on the bottom . The evidence suggest that the fish are",
+   "page": 1,
+   "confidence": 0.949,
+   "needs_review": false,
+   "flags": [],
+   "review": {
+    "status": "approved"
+   }
+  },
+  {
+   "student_id": "23D019",
+   "question": "Q2",
+   "answer_text": "aware of the moving footrope before it reaches them . They move away before",
+   "page": 1,
+   "confidence": 0.864,
+   "needs_review": false,
+   "flags": [],
+   "review": {
+    "status": "corrected",
+    "original": {
+     "question": "Q2",
+     "answer_text": "aware of the moving footage before it' reaches them . They move away before"
+    }
+   }
+  },
+  {
+   "student_id": "23D019",
+   "question": "Q1",
+   "answer_text": "it , swimming at the same speed for an unknown period of time , until",
+   "page": 1,
+   "confidence": 0.955,
+   "needs_review": false,
+   "flags": [],
+   "review": {
+    "status": "approved"
+   }
+  },
+  {
+   "student_id": "23D019",
+   "question": "Q3",
+   "answer_text": "they become ( 1) tired , or ( 2 ) more used to the disturbance .",
+   "page": 1,
+   "confidence": 0.877,
+   "needs_review": false,
+   "flags": [],
+   "review": {
+    "status": "approved"
+   }
+  }
+ ],
+ "model": "layout+microsoft/trocr-small-handwritten",
+ "confidence_kind": "calibrated",
+ "runtime_s": 2.923,
+ "review": {
+  "reviewer": "exam-cell-01",
+  "reviewed_at": "2026-10-23T06:42:35.793Z",
+  "approved": 4,
+  "corrected": 1,
+  "student_id_changed": false
+ }
+}

@@ -1,0 +1,22 @@
+# core asset
+numpy
+opencv-python-headless
+pillow
+torch
+transformers>=4.40
+sentencepiece
+pydantic>=2
+rapidfuzz
+pandas
+# API
+fastapi
+uvicorn
+python-multipart
+# optional: PDF input, re-training the glyph CNN, calibration, tests
+pypdfium2
+huggingface_hub
+pyarrow
+scikit-learn
+matplotlib
+pytest
+httpx

@@ -1,0 +1,48 @@
+{
+ "package_version": "0.6.0",
+ "schema_version": "1.0",
+ "booklets": 40,
+ "answers": 113,
+ "identical_to_notebook_S2": true,
+ "metrics": {
+  "CER": 0.1238,
+  "WER": 0.1829,
+  "CER(found)": 0.0521,
+  "label-free CER": 0.0446,
+  "Seg P": 0.9292,
+  "Seg R": 0.9211,
+  "Seg F1": 0.9251,
+  "Page acc": 1.0,
+  "ID acc": 0.95,
+  "wrong-ID": 0.0,
+  "ID null": 0.05,
+  "s/page": 2.8918
+ },
+ "ci95": {
+  "CER": [
+   0.0697,
+   0.1868
+  ],
+  "WER": [
+   0.1288,
+   0.2419
+  ],
+  "label-free CER": [
+   0.0337,
+   0.0559
+  ],
+  "Seg F1": [
+   0.8673,
+   0.9725
+  ],
+  "ID acc": [
+   0.875,
+   1.0
+  ]
+ },
+ "wall_seconds_per_page": 2.89,
+ "pipeline_seconds_per_page": 2.89,
+ "device": "cpu",
+ "model": "layout+microsoft/trocr-small-handwritten",
+ "needs_review_share": 0.168
+}

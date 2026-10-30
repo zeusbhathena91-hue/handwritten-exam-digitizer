@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "exam-digitizer"
+version = "0.7.0"
+description = "Handwritten Examination Digitizer: scanned answer booklet -> question-wise answer text with calibrated confidence (Group 1, NLP Course Project 2026)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "numpy", "opencv-python-headless", "pillow", "torch", "transformers>=4.40", "sentencepiece",
+    "pydantic>=2", "rapidfuzz", "pandas",
+]
+
+[project.optional-dependencies]
+api = ["fastapi", "uvicorn", "python-multipart"]
+pdf = ["pypdfium2"]
+train = ["huggingface_hub", "pyarrow", "scikit-learn"]
+tesseract = ["pytesseract"]
+dev = ["pytest", "httpx", "fastapi", "uvicorn", "python-multipart", "scikit-learn", "matplotlib", "pypdfium2"]
+
+[project.scripts]
+exam-digitizer = "exam_digitizer.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+exam_digitizer = ["assets/*", "api/*.html"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+addopts = "-q"

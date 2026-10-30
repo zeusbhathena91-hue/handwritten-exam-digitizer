@@ -1,0 +1,30 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\Users\Zeus F Bhathena\Downloads\snlp\handwritten_exam_digitizer
+configfile: pyproject.toml
+plugins: anyio-4.13.0, mock-3.15.1
+collected 53 items
+
+tests\test_api.py ....                                                   [  7%]
+tests\test_confidence.py ...                                             [ 13%]
+tests\test_glyphs.py ....                                                [ 20%]
+tests\test_group2_contract.py .....                                      [ 30%]
+tests\test_integration.py ......                                         [ 41%]
+tests\test_layout.py ...                                                 [ 47%]
+tests\test_metrics.py ...                                                [ 52%]
+tests\test_pipeline.py .....s                                            [ 64%]
+tests\test_preprocessing.py .....                                        [ 73%]
+tests\test_recognition_backends.py ..........                            [ 92%]
+tests\test_schema.py ....                                                [100%]
+
+============================== warnings summary ===============================
+tests/test_api.py::test_health_and_schema
+  C:\Users\ZEUSFB~1\AppData\Local\Temp\claude\C--Users-Zeus-F-Bhathena-Downloads-snlp\f45a0b77-2d23-4996-9e94-be800c372309\scratchpad\venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_api.py::test_health_and_schema
+  C:\Users\Zeus F Bhathena\Downloads\snlp\handwritten_exam_digitizer\src\exam_digitizer\models\recognition.py:290: UserWarning: could not initialise Gemini recogniser (GEMINI_API_KEY is not set (environment or ./.env)); falling back to 'microsoft/trocr-small-handwritten'
+    warnings.warn(f"could not initialise Gemini recogniser ({e}); falling back to {DEFAULT_HTR_MODEL!r}")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 52 passed, 1 skipped, 2 warnings in 48.16s ==================

@@ -1,0 +1,16 @@
+{
+ "kind": "platt",
+ "feature": "logit(raw_confidence)",
+ "mean": 2.295714350775431,
+ "scale": 0.8460694481326478,
+ "coef": 1.7270832993363916,
+ "intercept": 2.0718386010961427,
+ "fitted_on": "S2 answers of the frozen test set (n=113, 81% usable); usable = correct label and CER <= 0.10",
+ "out_of_fold": {
+  "AUROC": 0.855,
+  "Brier": 0.109,
+  "ECE": 0.061
+ },
+ "week": 5,
+ "htr_model": "microsoft/trocr-small-handwritten"
+}

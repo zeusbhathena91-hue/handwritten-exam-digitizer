@@ -1,0 +1,54 @@
+{
+ "booklet_id": "T001",
+ "student_id": "23D019",
+ "graded": [
+  {
+   "question": "Q4",
+   "page": 1,
+   "digitizer_confidence": 0.949,
+   "score": 4.0,
+   "maximum_score": 5.0,
+   "feedback": "Covers 4/4 rubric points. Similarity to the reference answer 0.67.",
+   "grader_confidence": 0.671,
+   "confidence": 0.637,
+   "human_reviewed": true
+  },
+  {
+   "question": "Q2",
+   "page": 1,
+   "digitizer_confidence": 0.864,
+   "score": 4.5,
+   "maximum_score": 5.0,
+   "feedback": "Covers 3/3 rubric points. Similarity to the reference answer 0.88.",
+   "grader_confidence": 0.877,
+   "confidence": 0.758,
+   "human_reviewed": true
+  },
+  {
+   "question": "Q1",
+   "page": 1,
+   "digitizer_confidence": 0.955,
+   "score": 4.0,
+   "maximum_score": 5.0,
+   "feedback": "Covers 3/3 rubric points. Similarity to the reference answer 0.68.",
+   "grader_confidence": 0.68,
+   "confidence": 0.649,
+   "human_reviewed": true
+  },
+  {
+   "question": "Q3",
+   "page": 1,
+   "digitizer_confidence": 0.877,
+   "score": 4.5,
+   "maximum_score": 5.0,
+   "feedback": "Covers 3/3 rubric points. Similarity to the reference answer 0.88.",
+   "grader_confidence": 0.884,
+   "confidence": 0.775,
+   "human_reviewed": true
+  }
+ ],
+ "review_queue": [],
+ "questions_not_found": [],
+ "auto_marks": 17.0,
+ "auto_max": 20.0
+}
